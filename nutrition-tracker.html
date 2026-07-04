@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Belle's Nutrition Tracker</title>
+<link rel="apple-touch-icon" href="nutrition-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fuel">
+<meta name="theme-color" content="#0f0f13">
+<style>
+  :root{
+    --bg:#0f0f13; --card:#1a1a22; --card2:#23232e; --line:#2e2e3a;
+    --text:#f2f2f5; --dim:#9a9aa8; --accent:#4ade80; --blue:#60a5fa;
+    --gold:#fbbf24; --pink:#f472b6; --red:#f87171;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:16px; padding-bottom:84px;}
+  header{padding:18px 16px 8px;}
+  header h1{margin:0; font-size:20px;}
+  header .sub{color:var(--dim); font-size:13px; margin-top:2px;}
+  .countdown{display:inline-block; background:var(--card2); border:1px solid var(--line);
+    border-radius:20px; padding:3px 12px; font-size:13px; color:var(--gold); margin-top:8px;}
+  main{padding:0 12px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin:10px 0;}
+  .card h2{margin:0 0 4px; font-size:17px;}
+  .tag{display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px;
+    background:var(--card2); color:var(--dim); margin-right:6px; margin-top:4px;}
+  .tag.show{color:var(--gold);}
+  .note{color:var(--dim); font-size:13px; line-height:1.45; margin:6px 0;}
+  .macro{margin:12px 0 4px;}
+  .macro .top{display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;}
+  .macro .top .n{font-weight:600;}
+  .bar{height:10px; background:var(--card2); border-radius:6px; overflow:hidden;}
+  .bar div{height:100%; border-radius:6px; transition:width .2s;}
+  .p .bar div{background:var(--pink);} .f .bar div{background:var(--gold);}
+  .c .bar div{background:var(--blue);} .k .bar div{background:var(--accent);}
+  .over .bar div{background:var(--red)!important;}
+  input[type=number]{background:var(--bg); color:var(--text); border:1px solid var(--line);
+    border-radius:8px; padding:8px 6px; font-size:16px; width:100%; text-align:center;}
+  input:focus{outline:1px solid var(--accent);}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:8px;}
+  .grid3 label{display:block; font-size:12px; color:var(--dim); margin-bottom:4px;}
+  button{background:var(--accent); color:#08210f; border:none; border-radius:12px;
+    padding:12px 16px; font-size:15px; font-weight:700; width:100%; margin-top:10px;}
+  button.small{width:auto; padding:8px 14px; font-size:13px; margin-top:6px;}
+  button.ghost{background:var(--card2); color:var(--text); border:1px solid var(--line); font-weight:600;}
+  button.danger{background:transparent; color:var(--red); border:1px solid var(--line);}
+  button:active{opacity:.75;}
+  .check{display:flex; align-items:center; gap:10px; background:var(--card2);
+    border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
+  .check input{width:22px; height:22px; accent-color:var(--accent); flex:none;}
+  nav{position:fixed; bottom:0; left:0; right:0; display:flex;
+    background:var(--card); border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));}
+  nav button{background:none; color:var(--dim); font-size:11px; font-weight:600;
+    margin:0; padding:6px 2px; border-radius:10px; display:flex; flex-direction:column;
+    align-items:center; gap:2px; flex:1;}
+  nav button .ico{font-size:20px;}
+  nav button.active{color:var(--accent);}
+  .daybtn{display:flex; justify-content:space-between; align-items:center;
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; margin:8px 0; cursor:pointer;}
+  .daybtn .l .d{font-weight:700; font-size:15px;}
+  .daybtn .l .t{color:var(--dim); font-size:13px; margin-top:2px;}
+  .pill{font-size:12px; color:var(--dim); text-align:right;}
+  .water{display:flex; align-items:center; gap:10px; margin-top:8px;}
+  .water .amt{font-size:22px; font-weight:700; flex:1; text-align:center;}
+  .water button{width:64px; margin:0; font-size:22px; padding:8px;}
+  textarea{width:100%; min-height:120px; background:var(--card2); color:var(--text);
+    border:1px solid var(--line); border-radius:10px; padding:10px; font-size:12px;}
+  .banner{background:linear-gradient(135deg,#1f2937,#111827); border:1px solid var(--line);
+    border-radius:14px; padding:14px; margin:10px 0; font-size:14px; line-height:1.5;}
+  .banner b{color:var(--gold);}
+  .tgt{display:flex; gap:8px; margin-top:8px;}
+  .tgt div{flex:1; background:var(--card2); border-radius:10px; padding:8px; text-align:center;}
+  .tgt .v{font-size:18px; font-weight:700;}
+  .tgt .l{font-size:11px; color:var(--dim);}
+</style>
+</head>
+<body>
+<header>
+  <h1>Belle's Nutrition Tracker</h1>
+  <div class="sub">Final push + peak week · MacroFactor stays the source of truth</div>
+  <div class="countdown" id="countdown"></div>
+</header>
+<main id="view"></main>
+<nav>
+  <button id="nav-today" onclick="go('today')"><span class="ico">🍚</span>Today</button>
+  <button id="nav-week" onclick="go('week')"><span class="ico">📅</span>All days</button>
+  <button id="nav-backup" onclick="go('backup')"><span class="ico">💾</span>Backup</button>
+</nav>
+
+<script>
+// ---------- Preloaded targets, July 5 to 18 ----------
+const BASE = {p:150,f:30,c:120, water:3.0, sodium:"Salt food normally",
+ note:"Extra carbs go around training: rice, oats, rice cakes, fruit. Foods from rotation only, nothing new between now and the show. No refeeds this week."};
+const PLANN = {
+"2026-07-05":{...BASE,title:"Final push week"},
+"2026-07-06":{...BASE,title:"Final push week"},
+"2026-07-07":{...BASE,title:"Final push week"},
+"2026-07-08":{...BASE,title:"Final push week"},
+"2026-07-09":{...BASE,title:"Final push week, rest day. Targets unchanged"},
+"2026-07-10":{...BASE,title:"Final push week"},
+"2026-07-11":{...BASE,title:"Final push week, last day before peak week"},
+"2026-07-12":{p:130,f:30,c:110,water:3.0,sodium:"Normal, salt food normally",title:"Peak week begins",
+ note:"Baseline weigh-in this morning. Standard target, no refeed. No new foods from here."},
+"2026-07-13":{p:130,f:30,c:95,water:3.25,sodium:"Normal, salt to taste",title:"Peak week, lower carb",
+ note:"Carbs at lower end, fibre slightly lower: swap 100 g oats for 60 g rice or sourdough."},
+"2026-07-14":{p:130,f:30,c:95,water:3.25,sodium:"Normal",title:"Peak week, lower carb",
+ note:"Lower fibre: no large salads, no cruciferous vegetables, no beans."},
+"2026-07-15":{p:130,f:30,c:140,water:3.0,sodium:"Normal",title:"Gentle carb up",
+ note:"White starches over whole grains: white rice, white potato, sweet potato, sourdough, Cream of Rice. Morning photos today decide the Thursday path."},
+"2026-07-16":{p:130,f:30,c:140,water:2.0,sodium:"Hold Wednesday level",title:"Hold and dry",
+ note:"Fibre minimal. No raw vegetables, salads, nuts, or high-fat dairy. Water drops to 2 L. Protect sleep tonight."},
+"2026-07-17":{p:130,f:30,c:230,water:1.25,sodium:"Normal at meals",title:"Check-in and tan day",
+ note:"Small carb meal in the morning, low fibre, fats under 50 g. Sip water through the day, 1 to 1.5 L. Check-in and tan per check-in-day-plan.md."},
+"2026-07-18":{p:0,f:0,c:0,water:0.5,sodium:"Pinch of salt with wake meal",title:"SHOW DAY",show:true,
+ note:"Eat per the show-day timeline below, not macro targets. Small, dry, familiar. Sip water 50 to 100 mL at a time."}
+};
+const DATES = Object.keys(PLANN);
+const SHOW = "2026-07-18";
+const BAG = ["White rice 250 g, sealed","Sweet potato 200 g, baked","Chicken or turkey 250 g, plain",
+"Rice cakes, 6 to 8","Nut butter packets x4","Honey packets x2","Salt, small jar","Two ripe bananas",
+"Black coffee flask (within 200 mg cap)","2 x 750 mL sealed water","Electrolyte packet (optional)",
+"Fork, plate, paper towels"];
+const SHOWPLAN = [
+["5:30 am","Wake. Pinch of salt under tongue, small sip of water, 5 min stretch"],
+["6:00 am","Wake meal: 100 g rice or 60 g rice cakes, 30 g chicken, 1 banana, pinch of salt"],
+["7:00 am","Hair, makeup, tan touch-ups. Sip 200 to 300 mL total"],
+["7:30 am","Snack: 50 g rice cakes, 1 tbsp almond butter, 1 honey packet"],
+["8:30 am","Depart. Suit on under cover-up, bag check, phone charged"],
+["9:00 am","Arrive Calgary Westin Airport. Set up backstage, find pump-up area"],
+["9:15 am","Mini snacks and pump per show-day-timeline.md"]];
+
+// ---------- Storage ----------
+const KEY = "belle-nutrition-tracker-v1";
+let db = load();
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || fresh(); }catch(e){ return fresh(); } }
+function fresh(){ return {intake:{}, water:{}, checks:{}, over:{}, bag:{}}; }
+function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+
+// ---------- Helpers ----------
+function todayStr(){ const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function fmtDay(ds){ return new Date(ds+"T12:00:00").toLocaleDateString("en-CA",{weekday:"short",month:"short",day:"numeric"}); }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function daysToShow(){ return Math.max(0, Math.ceil((new Date(SHOW+"T09:00:00")-new Date())/86400000)); }
+function targets(ds){
+  const p = PLANN[ds]; if(!p) return null;
+  const o = db.over[ds]||{};
+  const t = {p:o.p??p.p, f:o.f??p.f, c:o.c??p.c};
+  t.kcal = t.p*4 + t.f*9 + t.c*4;
+  return t;
+}
+
+// ---------- Views ----------
+let tab="today", dayOpen=null, editing=false;
+function go(t){ tab=t; if(t==="today") dayOpen=null; editing=false; render(); window.scrollTo(0,0); }
+function render(){
+  document.getElementById("countdown").textContent =
+    daysToShow()===0 ? "IT'S SHOW DAY 🏆" : daysToShow()+" days to stage";
+  ["today","week","backup"].forEach(t=>{
+    document.getElementById("nav-"+t).className = (t===tab)?"active":"";
+  });
+  const v=document.getElementById("view");
+  if(tab==="today") v.innerHTML = dayView(dayOpen||todayStr());
+  if(tab==="week") v.innerHTML = weekView();
+  if(tab==="backup") v.innerHTML = backupView();
+}
+
+function macroRow(cls,name,got,tgt,unit){
+  const pct = tgt? Math.min(100, got/tgt*100) : 0;
+  const over = tgt && got > tgt*1.05;
+  return '<div class="macro '+cls+(over?' over':'')+'"><div class="top"><span class="n">'+name+'</span>'+
+    '<span>'+(got||0)+' / '+tgt+' '+unit+'</span></div>'+
+    '<div class="bar"><div style="width:'+pct+'%"></div></div></div>';
+}
+
+function dayView(ds){
+  const p = PLANN[ds];
+  let h = "";
+  if(dayOpen){ h += '<button class="ghost small" onclick="go(\'week\')">← All days</button>'; }
+  if(!p){
+    return h+'<div class="card"><h2>'+fmtDay(ds)+'</h2><div class="note">No preloaded targets for this date. After July 18, reverse diet targets go here; ask Claude to plan them with you.</div></div>';
+  }
+  const t = targets(ds);
+  h += '<div class="card"><h2>'+fmtDay(ds)+'</h2>';
+  h += '<div>'+(p.show?'<span class="tag show">SHOW DAY</span>':'<span class="tag">'+esc(p.title)+'</span>')+'</div>';
+  if(p.note) h += '<div class="note">'+esc(p.note)+'</div>';
+  h += '<div class="note">Sodium: '+esc(p.sodium)+'</div></div>';
+
+  if(p.show){
+    h += '<div class="card"><h2>Show day timeline</h2>';
+    SHOWPLAN.forEach(r=>{ h += '<div class="check" style="gap:12px"><b style="min-width:64px">'+r[0]+'</b><div>'+esc(r[1])+'</div></div>'; });
+    h += '</div>';
+    h += '<div class="card"><h2>Show bag (pack Friday evening)</h2>';
+    BAG.forEach((b,i)=>{
+      h += '<div class="check"><input type="checkbox" '+(db.bag[i]?"checked":"")+
+        ' onchange="db.bag['+i+']=this.checked;save()"><div>'+esc(b)+'</div></div>';
+    });
+    h += '</div>';
+  } else {
+    // Targets
+    h += '<div class="card"><h2>Targets</h2><div class="tgt">'+
+      '<div><div class="v">'+t.p+'</div><div class="l">protein g</div></div>'+
+      '<div><div class="v">'+t.f+'</div><div class="l">fat g</div></div>'+
+      '<div><div class="v">'+t.c+'</div><div class="l">carbs g</div></div>'+
+      '<div><div class="v">'+t.kcal+'</div><div class="l">kcal</div></div></div>';
+    if(editing){
+      const o=db.over[ds]||{};
+      h += '<div class="grid3">'+
+        '<div><label>Protein g</label><input type="number" inputmode="numeric" value="'+t.p+'" onchange="setOver(\''+ds+'\',\'p\',this.value)"></div>'+
+        '<div><label>Fat g</label><input type="number" inputmode="numeric" value="'+t.f+'" onchange="setOver(\''+ds+'\',\'f\',this.value)"></div>'+
+        '<div><label>Carbs g</label><input type="number" inputmode="numeric" value="'+t.c+'" onchange="setOver(\''+ds+'\',\'c\',this.value)"></div></div>'+
+        '<button class="ghost small" onclick="delete db.over[\''+ds+'\'];save();editing=false;render()">Reset to plan</button>'+
+        '<button class="small" onclick="editing=false;render()">Done</button>';
+    } else {
+      h += '<button class="ghost small" onclick="editing=true;render()">Edit targets</button>';
+    }
+    h += '</div>';
+
+    // Intake
+    const g = db.intake[ds]||{};
+    const kcal = (g.p||0)*4 + (g.f||0)*9 + (g.c||0)*4;
+    h += '<div class="card"><h2>Eaten so far</h2>'+
+      '<div class="note">Copy the day\'s totals from MacroFactor whenever you like; the bars show where you stand.</div>'+
+      '<div class="grid3">'+
+      '<div><label>Protein g</label><input type="number" inputmode="numeric" value="'+(g.p??"")+'" onchange="setIn(\''+ds+'\',\'p\',this.value)"></div>'+
+      '<div><label>Fat g</label><input type="number" inputmode="numeric" value="'+(g.f??"")+'" onchange="setIn(\''+ds+'\',\'f\',this.value)"></div>'+
+      '<div><label>Carbs g</label><input type="number" inputmode="numeric" value="'+(g.c??"")+'" onchange="setIn(\''+ds+'\',\'c\',this.value)"></div></div>'+
+      macroRow('p','Protein',g.p||0,t.p,'g')+
+      macroRow('f','Fat',g.f||0,t.f,'g')+
+      macroRow('c','Carbs',g.c||0,t.c,'g')+
+      macroRow('k','Calories',kcal,t.kcal,'kcal')+
+      '</div>';
+  }
+
+  // Water
+  const ml = db.water[ds]||0;
+  const wt = Math.round(p.water*1000);
+  h += '<div class="card"><h2>Water</h2>'+
+    '<div class="water"><button class="ghost" onclick="addWater(\''+ds+'\',-250)">−</button>'+
+    '<div class="amt">'+(ml/1000).toFixed(2)+' / '+p.water.toFixed(1)+' L</div>'+
+    '<button onclick="addWater(\''+ds+'\',250)">+</button></div>'+
+    '<div class="macro k'+(ml>wt*1.15?' over':'')+'"><div class="bar"><div style="width:'+Math.min(100,ml/wt*100)+'%"></div></div></div>'+
+    '<div class="note">Each tap is 250 mL, about one glass.'+(ds>="2026-07-16"?" Water is capped today, do not exceed the target.":"")+'</div></div>';
+
+  // Daily checklist
+  const ck = db.checks[ds]||{};
+  const items = p.show ? [["weigh","Morning weigh-in logged"],["salt","Salt with wake meal"]]
+    : [["weigh","Morning weigh-in done and logged"],["mf","Everything logged in MacroFactor"],["rot","All foods from the rotation, nothing new"]];
+  h += '<div class="card"><h2>Checklist</h2>';
+  items.forEach(it=>{
+    h += '<div class="check"><input type="checkbox" '+(ck[it[0]]?"checked":"")+
+      ' onchange="setCheck(\''+ds+'\',\''+it[0]+'\',this.checked)"><div>'+it[1]+'</div></div>';
+  });
+  h += '</div>';
+  return h;
+}
+function setOver(ds,k,v){ db.over[ds]=db.over[ds]||{}; db.over[ds][k]=Number(v); save(); render(); }
+function setIn(ds,k,v){ db.intake[ds]=db.intake[ds]||{}; db.intake[ds][k]=v===""?undefined:Number(v); save(); render(); }
+function setCheck(ds,k,v){ db.checks[ds]=db.checks[ds]||{}; db.checks[ds][k]=v; save(); }
+function addWater(ds,d){ db.water[ds]=Math.max(0,(db.water[ds]||0)+d); save(); render(); }
+
+function weekView(){
+  let h = '<div class="banner">July 5 to 11: <b>1,350 kcal every day</b> (150P / 30F / 120C). Peak week follows the plan exactly. Rule 5 still stands: targets never drop further, only carbs adjust up if photos read flat.</div>';
+  DATES.forEach(ds=>{
+    const p=PLANN[ds], t=targets(ds);
+    const edited = !!db.over[ds];
+    h += '<div class="daybtn" onclick="openDay(\''+ds+'\')"><div class="l">'+
+      '<div class="d">'+fmtDay(ds)+(ds===todayStr()?' · today':'')+'</div>'+
+      '<div class="t">'+esc(p.title)+'</div></div>'+
+      '<div class="pill">'+(p.show?"🏆":t.kcal+' kcal<br>'+t.p+'P / '+t.f+'F / '+t.c+'C'+(edited?' ✎':''))+'</div></div>';
+  });
+  return h;
+}
+function openDay(ds){ dayOpen=ds; tab="today"; render(); window.scrollTo(0,0); }
+
+function backupView(){
+  return '<div class="card"><h2>Backup</h2>'+
+  '<div class="note">Data lives in this browser only. Copy it into Apple Notes every few days, same as the gym tracker.</div>'+
+  '<textarea id="bak">'+esc(JSON.stringify(db))+'</textarea>'+
+  '<button class="ghost" onclick="navigator.clipboard.writeText(JSON.stringify(db)).then(()=>alert(\'Copied\'))">Copy backup</button>'+
+  '<button onclick="importBak()">Import from pasted backup</button>'+
+  '<button class="danger" onclick="if(confirm(\'Erase everything?\')){db=fresh();save();render();}">Erase all data</button></div>';
+}
+function importBak(){
+  try{
+    const d = JSON.parse(document.getElementById("bak").value);
+    if(d && d.intake){ db=d; save(); alert("Imported."); render(); }
+    else alert("That does not look like a valid backup.");
+  }catch(e){ alert("Could not read that backup."); }
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Belle's Gym Tracker</title>
+<link rel="apple-touch-icon" href="gym-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gym">
+<meta name="theme-color" content="#0f0f13">
+<style>
+  :root{
+    --bg:#0f0f13; --card:#1a1a22; --card2:#23232e; --line:#2e2e3a;
+    --text:#f2f2f5; --dim:#9a9aa8; --accent:#4ade80; --accent2:#34d399;
+    --gold:#fbbf24; --pink:#f472b6; --red:#f87171;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:16px; padding-bottom:84px;}
+  header{padding:18px 16px 8px;}
+  header h1{margin:0; font-size:20px;}
+  header .sub{color:var(--dim); font-size:13px; margin-top:2px;}
+  .countdown{display:inline-block; background:var(--card2); border:1px solid var(--line);
+    border-radius:20px; padding:3px 12px; font-size:13px; color:var(--gold); margin-top:8px;}
+  main{padding:0 12px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin:10px 0;}
+  .card h2{margin:0 0 4px; font-size:17px;}
+  .card h3{margin:12px 0 6px; font-size:14px; color:var(--accent);}
+  .tag{display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px;
+    background:var(--card2); color:var(--dim); margin-right:6px; margin-top:4px;}
+  .tag.rest{color:var(--accent);}
+  .tag.show{color:var(--gold);}
+  .note{color:var(--dim); font-size:13px; line-height:1.45; margin:6px 0;}
+  .ex{border-top:1px solid var(--line); padding:10px 0 6px;}
+  .ex:first-of-type{border-top:none;}
+  .ex .name{font-weight:600; font-size:15px;}
+  .ex .rx{color:var(--dim); font-size:13px; margin-top:1px;}
+  .sets{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .setrow{display:flex; align-items:center; gap:4px; background:var(--card2);
+    border-radius:10px; padding:6px 8px;}
+  .setrow span{font-size:12px; color:var(--dim);}
+  input[type=number], input[type=text]{
+    background:var(--bg); color:var(--text); border:1px solid var(--line);
+    border-radius:8px; padding:8px 6px; font-size:16px; width:64px; text-align:center;}
+  input.wide{width:100%; text-align:left;}
+  input:focus{outline:1px solid var(--accent);}
+  .daily-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;}
+  .daily-item{background:var(--card2); border-radius:10px; padding:8px;}
+  .daily-item label{display:block; font-size:12px; color:var(--dim); margin-bottom:4px;}
+  .daily-item input{width:100%;}
+  button{background:var(--accent); color:#08210f; border:none; border-radius:12px;
+    padding:12px 16px; font-size:15px; font-weight:700; width:100%; margin-top:10px;}
+  button.small{width:auto; padding:8px 14px; font-size:13px; margin-top:6px;}
+  button.ghost{background:var(--card2); color:var(--text); border:1px solid var(--line); font-weight:600;}
+  button.danger{background:transparent; color:var(--red); border:1px solid var(--line);}
+  button:active{opacity:.75;}
+  .check{display:flex; align-items:center; gap:10px; background:var(--card2);
+    border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
+  .check input{width:22px; height:22px; accent-color:var(--accent);}
+  nav{position:fixed; bottom:0; left:0; right:0; display:flex;
+    background:var(--card); border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));}
+  nav button{background:none; color:var(--dim); font-size:11px; font-weight:600;
+    margin:0; padding:6px 2px; border-radius:10px; display:flex; flex-direction:column;
+    align-items:center; gap:2px; flex:1;}
+  nav button .ico{font-size:20px;}
+  nav button.active{color:var(--accent);}
+  .daybtn{display:flex; justify-content:space-between; align-items:center;
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; margin:8px 0; cursor:pointer;}
+  .daybtn .l .d{font-weight:700; font-size:15px;}
+  .daybtn .l .t{color:var(--dim); font-size:13px; margin-top:2px;}
+  .daybtn .done{color:var(--accent); font-size:18px;}
+  .pill{font-size:12px; color:var(--dim);}
+  svg{width:100%; height:auto;}
+  select{background:var(--card2); color:var(--text); border:1px solid var(--line);
+    border-radius:10px; padding:10px; font-size:15px; width:100%;}
+  textarea{width:100%; min-height:120px; background:var(--card2); color:var(--text);
+    border:1px solid var(--line); border-radius:10px; padding:10px; font-size:12px;}
+  .row2{display:flex; gap:8px;}
+  .row2 > *{flex:1;}
+  .hist-row{display:flex; justify-content:space-between; border-top:1px solid var(--line);
+    padding:8px 0; font-size:14px;}
+  .hist-row .v{font-weight:600;}
+  .banner{background:linear-gradient(135deg,#1f2937,#111827); border:1px solid var(--line);
+    border-radius:14px; padding:14px; margin:10px 0; font-size:14px; line-height:1.5;}
+  .banner b{color:var(--gold);}
+</style>
+</head>
+<body>
+<header>
+  <h1>Belle's Gym Tracker</h1>
+  <div class="sub">CPA Alberta Summer Naturals · July 18, 2026</div>
+  <div class="countdown" id="countdown"></div>
+</header>
+<main id="view"></main>
+<nav>
+  <button id="nav-today" onclick="go('today')"><span class="ico">☀️</span>Today</button>
+  <button id="nav-plan" onclick="go('plan')"><span class="ico">📋</span>Plan</button>
+  <button id="nav-custom" onclick="go('custom')"><span class="ico">➕</span>Custom</button>
+  <button id="nav-trends" onclick="go('trends')"><span class="ico">📈</span>Trends</button>
+  <button id="nav-backup" onclick="go('backup')"><span class="ico">💾</span>Backup</button>
+</nav>
+
+<script>
+// ---------- Preloaded plan: final push week + peak week ----------
+const PLAN = {
+"2026-07-05":{title:"Lower, glute and quad",cardio:null,posing:"15 min in heels",
+ note:"2 sets each, RPE cap 7 all week. No drop sets, no failure. Leave feeling like you barely worked.",
+ ex:[["Bulgarian split squat","2 x 10-12"],["Smith RDL","2 x 10-12"],["Hip thrust machine","2 x 8-10"],
+ ["Pendulum squat","2 x 10-12"],["Linear leg press","2 x 10-12"],["Hip abduction machine","2 x 20-25"],
+ ["Glute kickback (cable)","2 x 10-12 per leg"],["Back extension","2 x 10-12"],["Decline crunch","2 x 20-25"]]},
+"2026-07-06":{title:"Upper, abs, calves",cardio:"Stair master 30 min, level 6, conversational",posing:"15 min",
+ ex:[["Assisted pull up","2 x 8-10"],["Barbell row","2 x 8-10"],["Military press","2 x 6-8"],
+ ["Smith chest press","2 x 6-8"],["Cable lat pulldown","2 x 8-10"],["Lateral raise (DB)","2 x 10-12"],
+ ["Cable face pull","2 x 10-12"],["Tricep pushdown","2 x 8-10"],["Zottman curl","2 x 8-10"],
+ ["Calf raise","2 x 10-12"],["Decline crunch","2 x 20-25"]]},
+"2026-07-07":{title:"Lower, glute focus",cardio:null,posing:"20 min, full T-walk twice",
+ ex:[["Bulgarian split squat","2 x 10-12"],["Hip thrust machine","2 x 8-10"],["Smith RDL","2 x 10-12"],
+ ["Pendulum squat","2 x 10-12"],["Glute kickback (cable)","2 x 10-12 per leg"],
+ ["Hip abduction machine","2 x 20-25"],["Back extension","2 x 10-12"],["Decline crunch","2 x 20-25"]]},
+"2026-07-08":{title:"Lower, hamstring",cardio:"Stair master 30 min, level 6",posing:"15 min",
+ ex:[["Single leg hip thrust","2 x 10-12 per leg"],["Leg press, high stance","2 x 10-12"],
+ ["Good morning (barbell)","2 x 10-12"],["Seated leg curl","2 x 10-12"],["Hip adduction","2 x 10-12"],
+ ["Hip abduction","2 x 20-25"],["Leg extension","2 x 10-12"],["Decline crunch","2 x 20-25"]]},
+"2026-07-09":{title:"Rest day",rest:true,cardio:"30 min easy walk",posing:"20 min, video the T-walk",
+ note:"No lift today. Rest is the workout."},
+"2026-07-10":{title:"Upper",cardio:"Stair master 30 min, level 6",posing:"15 min",
+ ex:[["Back squat","2 x 8-10 @ RPE 7"],["Military press","2 x 6-8"],["Smith chest press","2 x 8"],
+ ["Seated cable face pull","2 x 8-10"],["Tricep pushdown","2 x 8-10"],["Calf raise","2 x 10-12"],
+ ["Hanging leg raise","2 x 12-15"]]},
+"2026-07-11":{title:"Rest day",rest:true,cardio:"30 min walk",posing:"20 min in heels, T-walk on video",
+ note:"No lift. Review the posing video against pose-checklist.md."},
+"2026-07-12":{title:"Peak week begins. Last lower session",cardio:null,posing:"25 min, T-walk twice on video",
+ note:"Baseline weigh-in this morning matters most this week. 2 sets, RPE cap 7.",
+ ex:[["Bulgarian split squat","2 x 10-12"],["Smith RDL","2 x 10-12"],["Hip thrust machine","2 x 8-10"],
+ ["Pendulum squat","2 x 10-12"],["Linear leg press","2 x 10-12"],["Hip abduction machine","2 x 20-25"],
+ ["Glute kickback (cable)","2 x 10-12 per leg"],["Back extension","2 x 10-12"],["Decline crunch","2 x 20-25"]]},
+"2026-07-13":{title:"Light upper pump, 20 min",cardio:"None from today onward",posing:"20 min in heels",
+ note:"No legs, no compounds. Plus 10 min band-only glute activation, then straight into posing.",
+ ex:[["Lat pulldown (light)","3 x 12 @ RPE 6"],["Cable lateral raise","3 x 15 @ RPE 6-7"],
+ ["Cable rear delt fly","3 x 15 @ RPE 6-7"],["Banded glute bridge","3 x 20"]]},
+"2026-07-14":{title:"Walk and posing only",rest:true,cardio:"30 min flat walk",
+ posing:"25 min, T-walk three times, video the last one"},
+"2026-07-15":{title:"Last upper pump, 15 min",cardio:null,posing:"25 min in heels",
+ note:"Final 10 min band glute activation after. Last lower-body work before the show. Photos this morning.",
+ ex:[["Push up","2 x 8 @ RPE 6"],["Cable row","3 x 12 @ RPE 6"],["Cable lateral raise","3 x 12 @ RPE 6"],
+ ["Banded face pull","3 x 15"]]},
+"2026-07-16":{title:"Hold and dry",rest:true,cardio:"30 min walk in the morning",
+ posing:"30 min, full T-walk three times",note:"Water drops to 2 L today. Protect sleep aggressively tonight."},
+"2026-07-17":{title:"Check-in and tan day",rest:true,cardio:"Light walk only",
+ posing:"10-15 min light, no sweat",note:"Athlete check-in, tan appointment. See check-in-day-plan.md."},
+"2026-07-18":{title:"SHOW DAY",show:true,cardio:null,posing:"Venue pump per show-day-timeline.md",
+ note:"You did the work. Eat per show-day fueling, stay warm, smile the whole T-walk. Enjoy every second."}
+};
+const DATES = Object.keys(PLAN);
+const SHOW = "2026-07-18";
+
+// ---------- Storage ----------
+const KEY = "belle-gym-tracker-v1";
+let db = load();
+function load(){
+  try{ return JSON.parse(localStorage.getItem(KEY)) || fresh(); }
+  catch(e){ return fresh(); }
+}
+function fresh(){ return {sessions:{}, daily:{}, custom:[]}; }
+function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+
+// ---------- Helpers ----------
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function fmtDay(ds){
+  const d = new Date(ds+"T12:00:00");
+  return d.toLocaleDateString("en-CA",{weekday:"short", month:"short", day:"numeric"});
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function daysToShow(){
+  const ms = new Date(SHOW+"T09:00:00") - new Date();
+  return Math.max(0, Math.ceil(ms/86400000));
+}
+
+// ---------- Views ----------
+let tab = "today";
+let planDate = null;
+function go(t){ tab = t; if(t==="today") planDate = null; render(); window.scrollTo(0,0); }
+
+function render(){
+  document.getElementById("countdown").textContent =
+    daysToShow() === 0 ? "IT'S SHOW DAY 🏆" : daysToShow() + " days to stage";
+  ["today","plan","custom","trends","backup"].forEach(t=>{
+    document.getElementById("nav-"+t).className = (t===tab)?"active":"";
+  });
+  const v = document.getElementById("view");
+  if(tab==="today") v.innerHTML = dayView(planDate || todayStr());
+  if(tab==="plan") v.innerHTML = planView();
+  if(tab==="custom") v.innerHTML = customView();
+  if(tab==="trends") v.innerHTML = trendsView();
+  if(tab==="backup") v.innerHTML = backupView();
+}
+
+// ----- Day / session view -----
+function dayView(ds){
+  const p = PLAN[ds];
+  const daily = db.daily[ds] || {};
+  let h = "";
+  if(planDate){ h += '<button class="ghost small" onclick="go(\'plan\')">← All days</button>'; }
+  h += '<div class="card"><h2>'+fmtDay(ds)+'</h2>';
+  if(p){
+    h += '<div>'+ (p.show ? '<span class="tag show">SHOW DAY</span>' : p.rest ? '<span class="tag rest">Rest / walk</span>' : '<span class="tag">Lift day</span>');
+    h += '<span class="tag">'+esc(p.title)+'</span></div>';
+    if(p.note) h += '<div class="note">'+esc(p.note)+'</div>';
+  } else {
+    h += '<div class="note">No planned session for this date. Log a custom workout in the Custom tab, or pick a plan day below.</div>';
+  }
+  h += '</div>';
+
+  // Daily log card
+  h += '<div class="card"><h2>Daily log</h2><div class="daily-grid">';
+  h += dailyInput(ds,"weight","Morning weight (kg)",daily.weight);
+  h += dailyInput(ds,"sleep","Sleep (h)",daily.sleep);
+  h += dailyInput(ds,"posing","Posing (min)",daily.posing);
+  h += dailyInput(ds,"mood","Mood /10",daily.mood);
+  h += '</div>';
+  if(p && p.cardio){
+    h += '<div class="check"><input type="checkbox" '+(daily.cardioDone?"checked":"")+
+      ' onchange="setDaily(\''+ds+'\',\'cardioDone\',this.checked)"><div>'+esc(p.cardio)+'</div></div>';
+  }
+  if(p && p.posing){
+    h += '<div class="check"><input type="checkbox" '+(daily.posingDone?"checked":"")+
+      ' onchange="setDaily(\''+ds+'\',\'posingDone\',this.checked)"><div>Posing: '+esc(p.posing)+'</div></div>';
+  }
+  h += '</div>';
+
+  // Exercises
+  if(p && p.ex){
+    const slog = db.sessions[ds] || {};
+    h += '<div class="card"><h2>Session</h2>';
+    p.ex.forEach((e,i)=>{
+      const nSets = parseInt(e[1]) || 2;
+      const sets = (slog[i] || []);
+      h += '<div class="ex"><div class="name">'+esc(e[0])+'</div><div class="rx">'+esc(e[1])+'</div><div class="sets">';
+      for(let s=0; s<nSets; s++){
+        const v = sets[s] || {};
+        h += '<div class="setrow"><span>'+(s+1)+'</span>'+
+          '<input type="number" inputmode="decimal" placeholder="kg" value="'+(v.w??"")+'" onchange="setSet(\''+ds+'\','+i+','+s+',\'w\',this.value)">'+
+          '<span>×</span>'+
+          '<input type="number" inputmode="numeric" placeholder="reps" value="'+(v.r??"")+'" onchange="setSet(\''+ds+'\','+i+','+s+',\'r\',this.value)">'+
+          '</div>';
+      }
+      h += '</div></div>';
+    });
+    const done = daily.sessionDone;
+    h += '<button onclick="setDaily(\''+ds+'\',\'sessionDone\','+(!done)+')">'+
+      (done ? "✓ Session logged. Tap to undo" : "Mark session complete")+'</button>';
+    h += '</div>';
+  }
+  return h;
+}
+function dailyInput(ds,k,label,val){
+  return '<div class="daily-item"><label>'+label+'</label>'+
+   '<input type="number" inputmode="decimal" value="'+(val??"")+'" onchange="setDaily(\''+ds+'\',\''+k+'\',this.value)"></div>';
+}
+function setDaily(ds,k,v){
+  db.daily[ds] = db.daily[ds] || {};
+  db.daily[ds][k] = (v===""? undefined : (typeof v==="boolean" ? v : Number(v)));
+  save(); if(k==="sessionDone"||k==="cardioDone"||k==="posingDone") render();
+}
+function setSet(ds,ex,s,k,v){
+  db.sessions[ds] = db.sessions[ds] || {};
+  db.sessions[ds][ex] = db.sessions[ds][ex] || [];
+  db.sessions[ds][ex][s] = db.sessions[ds][ex][s] || {};
+  db.sessions[ds][ex][s][k] = v===""? undefined : Number(v);
+  save();
+}
+
+// ----- Plan list -----
+function planView(){
+  let h = '<div class="banner">Final two weeks. <b>RPE cap 7</b>, 2 sets per exercise, no drop sets, no failure. Recovery is the plan.</div>';
+  DATES.forEach(ds=>{
+    const p = PLAN[ds];
+    const done = (db.daily[ds]||{}).sessionDone;
+    const isToday = ds===todayStr();
+    h += '<div class="daybtn" onclick="openDay(\''+ds+'\')"><div class="l">'+
+      '<div class="d">'+fmtDay(ds)+(isToday?' · today':'')+'</div>'+
+      '<div class="t">'+esc(p.title)+(p.cardio? " · cardio":"")+'</div></div>'+
+      '<div>'+(done?'<span class="done">✓</span>':'<span class="pill">'+(p.rest?"rest":p.show?"🏆":"lift")+'</span>')+'</div></div>';
+  });
+  return h;
+}
+function openDay(ds){ planDate = ds; tab = "today"; render(); window.scrollTo(0,0); }
+
+// ----- Custom workouts -----
+let draft = null;
+function customView(){
+  let h = '<div class="card"><h2>Custom workout</h2><div class="note">For anything outside the plan, and for all your training after July 18.</div>';
+  if(!draft){
+    h += '<button onclick="startDraft()">Start new workout</button></div>';
+  } else {
+    h += '<div class="row2"><input class="wide" type="text" id="dname" placeholder="Workout name" value="'+esc(draft.name)+'" onchange="draft.name=this.value">'+
+      '</div>';
+    draft.ex.forEach((e,i)=>{
+      h += '<div class="ex"><input class="wide" type="text" placeholder="Exercise name" value="'+esc(e.n)+'" onchange="draft.ex['+i+'].n=this.value"><div class="sets">';
+      e.sets.forEach((st,s)=>{
+        h += '<div class="setrow"><span>'+(s+1)+'</span>'+
+        '<input type="number" inputmode="decimal" placeholder="kg" value="'+(st.w??"")+'" onchange="draft.ex['+i+'].sets['+s+'].w=Number(this.value)">'+
+        '<span>×</span>'+
+        '<input type="number" inputmode="numeric" placeholder="reps" value="'+(st.r??"")+'" onchange="draft.ex['+i+'].sets['+s+'].r=Number(this.value)">'+
+        '</div>';
+      });
+      h += '</div><button class="ghost small" onclick="draft.ex['+i+'].sets.push({});render()">+ set</button></div>';
+    });
+    h += '<button class="ghost" onclick="draft.ex.push({n:\'\',sets:[{}]});render()">+ Add exercise</button>';
+    h += '<button onclick="saveDraft()">Save workout</button>';
+    h += '<button class="danger" onclick="draft=null;render()">Discard</button></div>';
+  }
+  // history
+  const list = [...db.custom].reverse();
+  if(list.length){
+    h += '<div class="card"><h2>Past custom workouts</h2>';
+    list.forEach(w=>{
+      h += '<div class="ex"><div class="name">'+esc(w.name||"Workout")+'</div><div class="rx">'+fmtDay(w.date)+'</div>';
+      w.ex.forEach(e=>{
+        if(!e.n) return;
+        const best = e.sets.filter(s=>s.w).sort((a,b)=>b.w-a.w)[0];
+        h += '<div class="hist-row"><span>'+esc(e.n)+'</span><span class="v">'+
+          (best? best.w+" kg × "+(best.r||"?") : (e.sets[0]&&e.sets[0].r? e.sets[0].r+" reps":"logged"))+'</span></div>';
+      });
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+  return h;
+}
+function startDraft(){ draft = {name:"", date:todayStr(), ex:[{n:"",sets:[{}]}]}; render(); }
+function saveDraft(){
+  draft.ex = draft.ex.filter(e=>e.n);
+  if(draft.ex.length){ db.custom.push(draft); save(); }
+  draft = null; render();
+}
+
+// ----- Trends -----
+function trendsView(){
+  // weight chart
+  const pts = Object.entries(db.daily).filter(([d,v])=>v.weight).map(([d,v])=>[d,v.weight]).sort();
+  let h = '<div class="card"><h2>Morning weight</h2>';
+  if(pts.length<2){
+    h += '<div class="note">Log at least two morning weights and the trend appears here. Weigh in after the bathroom, before food or water.</div>';
+    if(pts.length===1) h += '<div class="hist-row"><span>'+fmtDay(pts[0][0])+'</span><span class="v">'+pts[0][1]+' kg</span></div>';
+  } else {
+    const ws = pts.map(p=>p[1]);
+    const min = Math.min(...ws)-0.3, max = Math.max(...ws)+0.3;
+    const W=320,H=140,P=10;
+    const x = i => P + i*(W-2*P)/(pts.length-1);
+    const y = w => H-P - (w-min)*(H-2*P)/(max-min);
+    let path = pts.map((p,i)=>(i?"L":"M")+x(i).toFixed(1)+","+y(p[1]).toFixed(1)).join(" ");
+    h += '<svg viewBox="0 0 '+W+' '+H+'">';
+    h += '<path d="'+path+'" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"/>';
+    pts.forEach((p,i)=>{ h+='<circle cx="'+x(i)+'" cy="'+y(p[1])+'" r="3.5" fill="#4ade80"/>'; });
+    h += '</svg>';
+    h += '<div class="hist-row"><span>Latest</span><span class="v">'+ws[ws.length-1]+' kg</span></div>';
+    h += '<div class="hist-row"><span>Change</span><span class="v">'+(ws[ws.length-1]-ws[0]).toFixed(1)+' kg</span></div>';
+  }
+  h += '</div>';
+
+  // exercise history
+  const names = new Set();
+  DATES.forEach(ds=>{ (PLAN[ds].ex||[]).forEach(e=>names.add(e[0])); });
+  db.custom.forEach(w=>w.ex.forEach(e=>e.n&&names.add(e.n)));
+  h += '<div class="card"><h2>Exercise history</h2><select id="exsel" onchange="selEx=this.value;render()">';
+  h += '<option value="">Choose an exercise…</option>';
+  [...names].sort().forEach(n=>{
+    h += '<option '+(selEx===n?"selected":"")+'>'+esc(n)+'</option>';
+  });
+  h += '</select>';
+  if(selEx){
+    const rows = [];
+    DATES.forEach(ds=>{
+      const p = PLAN[ds]; if(!p.ex) return;
+      p.ex.forEach((e,i)=>{
+        if(e[0]!==selEx) return;
+        const sets = (db.sessions[ds]||{})[i]||[];
+        const best = sets.filter(s=>s&&s.w).sort((a,b)=>b.w-a.w)[0];
+        if(best) rows.push([ds, best.w+" kg × "+(best.r||"?")]);
+      });
+    });
+    db.custom.forEach(w=>w.ex.forEach(e=>{
+      if(e.n!==selEx) return;
+      const best = e.sets.filter(s=>s.w).sort((a,b)=>b.w-a.w)[0];
+      if(best) rows.push([w.date, best.w+" kg × "+(best.r||"?")]);
+    }));
+    rows.sort();
+    if(rows.length){ rows.forEach(r=>{ h += '<div class="hist-row"><span>'+fmtDay(r[0])+'</span><span class="v">'+r[1]+'</span></div>'; }); }
+    else h += '<div class="note">No logged sets for this exercise yet.</div>';
+  }
+  h += '</div>';
+
+  // consistency
+  const doneCount = DATES.filter(ds=>(db.daily[ds]||{}).sessionDone).length;
+  const posingSum = Object.values(db.daily).reduce((a,v)=>a+(v.posing||0),0);
+  h += '<div class="card"><h2>Consistency</h2>'+
+    '<div class="hist-row"><span>Plan sessions completed</span><span class="v">'+doneCount+'</span></div>'+
+    '<div class="hist-row"><span>Total posing minutes logged</span><span class="v">'+posingSum+'</span></div></div>';
+  return h;
+}
+let selEx = "";
+function selElVal(){ const el=document.getElementById("exsel"); return el? el.value : ""; }
+
+// ----- Backup -----
+function backupView(){
+  return '<div class="card"><h2>Backup</h2>'+
+  '<div class="note">Your data lives in this browser only and does not sync between phone and laptop. Copy this backup somewhere safe (Apple Notes works) every few days, or before switching devices.</div>'+
+  '<textarea id="bak">'+esc(JSON.stringify(db))+'</textarea>'+
+  '<button class="ghost" onclick="navigator.clipboard.writeText(JSON.stringify(db)).then(()=>alert(\'Copied\'))">Copy backup</button>'+
+  '<button onclick="importBak()">Import from pasted backup</button>'+
+  '<button class="danger" onclick="if(confirm(\'Erase everything?\')){db=fresh();save();render();}">Erase all data</button></div>';
+}
+function importBak(){
+  try{
+    const t = document.getElementById("bak").value;
+    const d = JSON.parse(t);
+    if(d && d.daily){ db = d; save(); alert("Imported."); render(); }
+    else alert("That does not look like a valid backup.");
+  }catch(e){ alert("Could not read that backup."); }
+}
+
+render();
+</script>
+</body>
+</html>
